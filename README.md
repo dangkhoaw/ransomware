@@ -1,6 +1,6 @@
 # Simple ransomware script using python
 
-> [!NOTE]
+> [!IMPORTANT]
 > This script is not a real ransomware, it just encrypts the files in the directory where it is executed. It is for educational purposes only.
 
 ## Requirements
