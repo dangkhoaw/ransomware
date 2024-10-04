@@ -32,8 +32,7 @@ class Ransomware:
 
             return True
 
-        except Exception as e:
-            print(f"{self.__red}{e}")
+        except Exception:
             return False
 
     def __process_files_in_folder(self, path: str, mode: str) -> None:

